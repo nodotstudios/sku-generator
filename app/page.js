@@ -56,7 +56,7 @@ export default function SkuGenerator() {
     } catch (e) {}
   }, [darkMode]);
 
-  const allSizes = ["XS", "S", "M", "L", "XL", "XXL"];
+  const allSizes = ["3XS","XXS","XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 
   const toggleSize = (size) => {
     setSizes((prev) => (prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]));
