@@ -18,6 +18,17 @@ export default function SkuGenerator() {
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
 
+  // responsive: detect mobile to show icons only
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    function update() {
+      setIsMobile(window.innerWidth < 640);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   useEffect(() => {
     try {
       const storedTheme = localStorage.getItem("theme");
@@ -202,17 +213,22 @@ export default function SkuGenerator() {
       color: palette.text,
       paddingBottom: 24,
     },
+    /* header uses grid so center stays perfectly centered */
     header: {
-      padding: "18px 24px",
+      padding: "14px 18px",
       background: palette.surface,
       borderBottom: `1px solid ${palette.border}`,
-      display: "flex",
+      display: "grid",
+      gridTemplateColumns: "min-content 1fr min-content",
       alignItems: "center",
-      justifyContent: "space-between",
       gap: 12,
       boxShadow: darkMode ? "0 4px 18px rgba(2,6,23,0.6)" : "0 2px 8px rgba(15,23,42,0.04)",
     },
+    headerLeft: { display: "flex", alignItems: "center", gap: 8 },
+    headerCenter: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" },
+    headerRight: { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 },
     title: { fontSize: 18, fontWeight: 800, letterSpacing: 0.6 },
+    subTitle: { fontSize: 12, color: palette.muted, marginTop: 4 },
     headerActions: { display: "flex", gap: 8, alignItems: "center" },
     toggleBtn: { padding: "8px 12px", borderRadius: 10, border: `1px solid ${palette.border}`, background: "transparent", color: palette.text, cursor: "pointer" },
     wrap: { display: "flex", gap: 24, padding: 24, flexWrap: "wrap" },
@@ -259,23 +275,41 @@ export default function SkuGenerator() {
   return (
     <div style={styles.page}>
       <header style={styles.header}>
-        <div style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
-          <div style={styles.title}>SKU GENERATOR</div>
-          <div style={styles.helper}>for clothing brands · Nodot Studios</div>
+        {/* left - how to use (text on desktop, icon on mobile) */}
+        <div style={styles.headerLeft}>
+          <button
+            onClick={() => setShowHowTo(true)}
+            title="How to use"
+            aria-label="How to use"
+            style={styles.toggleBtn}
+          >
+            {isMobile ? "❔" : "❔ How to use"}
+          </button>
         </div>
 
-        <div style={styles.headerActions}>
-          <button onClick={() => setShowHowTo(true)} title="How to use" style={{ ...styles.toggleBtn, marginRight: 8 }}>
-            ❔ How to use
-          </button>
+        {/* center - always centered */}
+        <div style={styles.headerCenter}>
+          <div style={{ ...styles.title, fontSize: isMobile ? 16 : 18, lineHeight: 1 }}>{/* center main title */}
+            SKU GENERATOR
+          </div>
+          <div style={styles.subTitle}>for clothing brands by Nodot Studios</div>
+        </div>
 
-          <button onClick={() => setDarkMode((v) => !v)} aria-label="Toggle theme" style={styles.toggleBtn} title={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
-            {darkMode ? "🌞 Light" : "🌙 Dark"}
+        {/* right - theme toggle (text on desktop, icon on mobile) */}
+        <div style={styles.headerRight}>
+          <button
+            onClick={() => setDarkMode((v) => !v)}
+            aria-label="Toggle theme"
+            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            style={styles.toggleBtn}
+          >
+            {isMobile ? (darkMode ? "🌞" : "🌙") : (darkMode ? "🌞 Light" : "🌙 Dark")}
           </button>
         </div>
       </header>
 
       <main style={styles.wrap}>
+        {/* Left column */}
         <div style={styles.left}>
           <div style={styles.card}>
             <div style={{ display: "grid", gap: 12 }}>
@@ -368,6 +402,7 @@ export default function SkuGenerator() {
           </div>
         </div>
 
+        {/* Right area - table */}
         <div style={styles.rightCard}>
           <div style={{ display: "flex", gap: 12, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Generated SKUs ({generated.length})</h2>
@@ -424,6 +459,7 @@ export default function SkuGenerator() {
         Powered by <strong>Nodot Studios</strong>
       </footer>
 
+      {/* Rule modal */}
       {showRuleModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
           <div style={{ width: 760, maxWidth: "96%", borderRadius: 12, padding: 18, background: palette.surface, border: `1px solid ${palette.border}` }}>
@@ -474,6 +510,7 @@ export default function SkuGenerator() {
         </div>
       )}
 
+      {/* How to use modal */}
       {showHowTo && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
           <div style={{ width: 700, maxWidth: "96%", borderRadius: 12, padding: 18, background: palette.surface, border: `1px solid ${palette.border}` }}>
