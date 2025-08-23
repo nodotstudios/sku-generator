@@ -7,6 +7,7 @@ export default function SkuGenerator() {
   const [product, setProduct] = useState("");
   const [year, setYear] = useState("");
   const [attribute3, setAttribute3] = useState("");
+  const [attribute4, setAttribute4] = useState("");
   const [sizes, setSizes] = useState([]);
   const [generated, setGenerated] = useState([]);
   const [error, setError] = useState("");
@@ -91,10 +92,12 @@ export default function SkuGenerator() {
 
     const prodCode = buildProductCode(product, year, rule).toUpperCase();
     const attr3Code = buildAttrCode(attribute3, rule).toUpperCase();
+    const attr4Code = buildAttrCode(attribute4, rule).toUpperCase();
 
     const parts = [];
     if (prodCode) parts.push(prodCode);
     if (attr3Code) parts.push(attr3Code);
+    if (attr4Code) parts.push(attr4Code);
 
     const sep = separator || "-";
 
@@ -106,6 +109,7 @@ export default function SkuGenerator() {
         product,
         year,
         attribute3,
+        attribute4,
         size,
         rule,
         separator: sep,
@@ -121,6 +125,7 @@ export default function SkuGenerator() {
     setProduct("");
     setYear("");
     setAttribute3("");
+    setAttribute4("");
     setSizes([]);
   };
 
@@ -129,11 +134,12 @@ export default function SkuGenerator() {
   };
 
   const exportCSV = () => {
-    const data = generated.map(({ sku, product, year, attribute3, size, rule, separator }) => ({
+    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator }) => ({
       SKU: sku,
       Product: product,
       Year: year,
       Attribute3: attribute3,
+      Attribute4: attribute4,
       Size: size,
       Rule: rule,
       Separator: separator,
@@ -145,11 +151,12 @@ export default function SkuGenerator() {
   };
 
   const exportExcel = () => {
-    const data = generated.map(({ sku, product, year, attribute3, size, rule, separator }) => ({
+    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator }) => ({
       SKU: sku,
       Product: product,
       Year: year,
       Attribute3: attribute3,
+      Attribute4: attribute4,
       Size: size,
       Rule: rule,
       Separator: separator,
@@ -207,46 +214,16 @@ export default function SkuGenerator() {
     },
     title: { fontSize: 18, fontWeight: 800, letterSpacing: 0.6 },
     headerActions: { display: "flex", gap: 8, alignItems: "center" },
-    toggleBtn: {
-      padding: "8px 12px",
-      borderRadius: 10,
-      border: `1px solid ${palette.border}`,
-      background: "transparent",
-      color: palette.text,
-      cursor: "pointer",
-    },
+    toggleBtn: { padding: "8px 12px", borderRadius: 10, border: `1px solid ${palette.border}`, background: "transparent", color: palette.text, cursor: "pointer" },
     wrap: { display: "flex", gap: 24, padding: 24, flexWrap: "wrap" },
     left: { flex: "1 1 360px", maxWidth: 520, display: "flex", flexDirection: "column", gap: 16 },
-    card: {
-      background: palette.surface,
-      borderRadius: 12,
-      padding: 16,
-      boxShadow: darkMode ? "0 8px 30px rgba(2,6,23,0.6)" : "0 6px 22px rgba(15,23,42,0.06)",
-      border: `1px solid ${palette.border}`,
-    },
+    card: { background: palette.surface, borderRadius: 12, padding: 16, boxShadow: darkMode ? "0 8px 30px rgba(2,6,23,0.6)" : "0 6px 22px rgba(15,23,42,0.06)", border: `1px solid ${palette.border}` },
     label: { fontSize: 12, fontWeight: 700, color: palette.muted, marginTop: 6 },
-    input: {
-      width: "100%",
-      padding: "10px 12px",
-      borderRadius: 10,
-      border: `1px solid ${palette.border}`,
-      outline: "none",
-      background: darkMode ? palette.subtleBg : "#fff",
-      color: palette.text,
-      fontSize: 14,
-    },
+    input: { width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${palette.border}`, outline: "none", background: darkMode ? palette.subtleBg : "#fff", color: palette.text, fontSize: 14 },
     checkboxRow: { display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 },
     btnPrimary: { padding: "10px 14px", borderRadius: 10, border: "none", background: palette.accent, color: "#fff", fontWeight: 700, cursor: "pointer" },
     btnGhost: { padding: "6px 10px", borderRadius: 8, border: `1px solid ${palette.border}`, background: "transparent", color: palette.text, cursor: "pointer" },
-    rightCard: {
-      flex: "2 1 520px",
-      background: palette.surface,
-      borderRadius: 12,
-      padding: 16,
-      boxShadow: darkMode ? "0 8px 30px rgba(2,6,23,0.6)" : "0 6px 22px rgba(15,23,42,0.06)",
-      border: `1px solid ${palette.border}`,
-      overflow: "hidden",
-    },
+    rightCard: { flex: "2 1 520px", background: palette.surface, borderRadius: 12, padding: 16, boxShadow: darkMode ? "0 8px 30px rgba(2,6,23,0.6)" : "0 6px 22px rgba(15,23,42,0.06)", border: `1px solid ${palette.border}`, overflow: "hidden" },
     tableWrap: { maxHeight: "70vh", overflow: "auto", marginTop: 12 },
     table: { width: "100%", borderCollapse: "collapse", minWidth: 700, fontSize: 14 },
     th: { position: "sticky", top: 0, background: darkMode ? "#0b1220" : palette.accent, border: `1px solid ${palette.border}`, padding: 10, textAlign: "left", color: darkMode ? palette.text : "#fff", fontWeight: 700 },
@@ -262,20 +239,20 @@ export default function SkuGenerator() {
     rule1: {
       title: "Rule 1 — first 3 letters from first word (per attribute). Year added to product code",
       examples: [
-        { input: { product: "Fall Winter", year: "2024", attribute3: "Denim Jacket" } },
-        { input: { product: "Summer", year: "", attribute3: "Basic Tee" } },
+        { input: { product: "Fall Winter", year: "2024", attribute3: "Denim Jacket", attribute4: "Blue Wash" } },
+        { input: { product: "Summer", year: "", attribute3: "Basic Tee", attribute4: "" } },
       ],
       note:
-        "Rule 1: For each attribute we take the first 3 letters of the first word only. If year is provided, its last 2 digits are appended directly to the product code.",
+        "Rule 1: For each attribute take the first 3 letters of the first word only. If year is provided, its last 2 digits are appended directly to the product code.",
     },
     rule2: {
       title: "Rule 2 — first letters of up to first 3 words (per attribute). Year added to product code",
       examples: [
-        { input: { product: "Fall Winter Collection", year: "2024", attribute3: "Denim Jacket" } },
-        { input: { product: "Summer", year: "", attribute3: "Basic Tee Long" } },
+        { input: { product: "Fall Winter Collection", year: "2024", attribute3: "Denim Jacket", attribute4: "Blue Wash" } },
+        { input: { product: "Summer", year: "", attribute3: "Basic Tee Long", attribute4: "" } },
       ],
       note:
-        "Rule 2: For each attribute we take the first letter of each of the first up to 3 words and join them. If year is provided, its last 2 digits are appended directly to the product code.",
+        "Rule 2: For each attribute take the first letter of each of the first up to 3 words and join them. If year is provided, its last 2 digits are appended directly to the product code.",
     },
   };
 
@@ -319,6 +296,11 @@ export default function SkuGenerator() {
               </div>
 
               <div>
+                <div style={styles.label}>Attribute 4 (Other info — optional)</div>
+                <input style={styles.input} placeholder="e.g. Blue Wash or Style code" value={attribute4} onChange={(e) => setAttribute4(e.target.value)} />
+              </div>
+
+              <div>
                 <div style={styles.label}>Separator</div>
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                   <button onClick={() => setSeparator("-")} style={{ ...(separator === "-" ? styles.btnPrimary : styles.btnGhost) }}>-</button>
@@ -359,7 +341,7 @@ export default function SkuGenerator() {
 
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <button style={styles.btnPrimary} onClick={generateSKU}>Generate SKU</button>
-                <button style={styles.btnGhost} onClick={() => { setProduct(""); setYear(""); setAttribute3(""); setSizes([]); setError(""); }}>Reset</button>
+                <button style={styles.btnGhost} onClick={() => { setProduct(""); setYear(""); setAttribute3(""); setAttribute4(""); setSizes([]); setError(""); }}>Reset</button>
               </div>
             </div>
           </div>
@@ -403,6 +385,7 @@ export default function SkuGenerator() {
                   <th style={styles.th}>Product</th>
                   <th style={styles.th}>Year</th>
                   <th style={styles.th}>Attribute 3</th>
+                  <th style={styles.th}>Attribute 4</th>
                   <th style={styles.th}>Size</th>
                   <th style={styles.th}>Rule</th>
                   <th style={styles.th}>Delete</th>
@@ -411,7 +394,7 @@ export default function SkuGenerator() {
               <tbody>
                 {generated.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ ...styles.td, textAlign: "center", padding: 24, color: palette.muted }}>
+                    <td colSpan={8} style={{ ...styles.td, textAlign: "center", padding: 24, color: palette.muted }}>
                       No SKUs yet — add Product name and choose sizes, then click Generate SKU.
                     </td>
                   </tr>
@@ -423,6 +406,7 @@ export default function SkuGenerator() {
                     <td style={styles.td}>{row.product}</td>
                     <td style={styles.td}>{row.year}</td>
                     <td style={styles.td}>{row.attribute3}</td>
+                    <td style={styles.td}>{row.attribute4}</td>
                     <td style={styles.td}>{row.size}</td>
                     <td style={styles.td}>{row.rule}</td>
                     <td style={{ ...styles.td, textAlign: "center" }}>
@@ -442,26 +426,28 @@ export default function SkuGenerator() {
 
       {showRuleModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
-          <div style={{ width: 720, maxWidth: "94%", borderRadius: 12, padding: 18, background: palette.surface, border: `1px solid ${palette.border}` }}>
+          <div style={{ width: 760, maxWidth: "96%", borderRadius: 12, padding: 18, background: palette.surface, border: `1px solid ${palette.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <h3 style={{ margin: 0 }}>{ruleExamples[rule].title}</h3>
+              <h3 style={{ margin: 0 }}>{rule === "rule1" ? ruleExamples.rule1.title : ruleExamples.rule2.title}</h3>
               <div>
                 <button onClick={() => setShowRuleModal(false)} style={styles.btnGhost}>Close</button>
               </div>
             </div>
 
-            <p style={{ color: palette.muted, marginBottom: 10 }}>{ruleExamples[rule].note}</p>
+            <p style={{ color: palette.muted, marginBottom: 10 }}>{rule === "rule1" ? ruleExamples.rule1.note : ruleExamples.rule2.note}</p>
 
             <div style={{ display: "grid", gap: 8 }}>
-              {ruleExamples[rule].examples.map((ex, idx) => {
+              {(rule === "rule1" ? ruleExamples.rule1.examples : ruleExamples.rule2.examples).map((ex, idx) => {
                 const inp = ex.input;
                 const produced = (() => {
                   const p = buildProductCode(inp.product, inp.year, rule).toUpperCase();
-                  const a = buildAttrCode(inp.attribute3, rule).toUpperCase();
+                  const a3 = buildAttrCode(inp.attribute3, rule).toUpperCase();
+                  const a4 = buildAttrCode(inp.attribute4 || "", rule).toUpperCase();
                   const sep = "-";
                   const parts = [];
                   if (p) parts.push(p);
-                  if (a) parts.push(a);
+                  if (a3) parts.push(a3);
+                  if (a4) parts.push(a4);
                   return parts.join(sep);
                 })();
 
@@ -473,6 +459,7 @@ export default function SkuGenerator() {
                         Product: <em>{inp.product}</em>
                         {inp.year ? <> | Year: <em>{inp.year}</em></> : null}
                         {inp.attribute3 ? <> | Attribute3: <em>{inp.attribute3}</em></> : null}
+                        {inp.attribute4 ? <> | Attribute4: <em>{inp.attribute4}</em></> : null}
                       </span>
                     </div>
                     <div style={{ marginTop: 6 }}>
@@ -489,7 +476,7 @@ export default function SkuGenerator() {
 
       {showHowTo && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
-          <div style={{ width: 680, maxWidth: "96%", borderRadius: 12, padding: 18, background: palette.surface, border: `1px solid ${palette.border}` }}>
+          <div style={{ width: 700, maxWidth: "96%", borderRadius: 12, padding: 18, background: palette.surface, border: `1px solid ${palette.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <h3 style={{ margin: 0 }}>How to use SKU Generator</h3>
               <div>
@@ -499,8 +486,8 @@ export default function SkuGenerator() {
 
             <ol style={{ color: palette.muted, paddingLeft: 18 }}>
               <li>Enter <strong>Product Name</strong> (required).</li>
-              <li>Year is optional — if you add it, the last 2 digits will be appended to the product code.</li>
-              <li>Attribute 3 is optional — add any extra info (e.g. Denim Jacket).</li>
+              <li>Year is optional. If provided, the last two digits will be appended to the product code.</li>
+              <li>Attribute 3 and Attribute 4 are optional. Add extra info such as styles or collection names.</li>
               <li>Choose a <strong>separator</strong> (-, :, /) used across the SKU parts.</li>
               <li>Select a <strong>rule</strong> to decide how codes are extracted from the attributes. Click Rule info for examples.</li>
               <li>Select sizes and click <strong>Generate SKU</strong>. SKUs are stored in your browser.</li>
