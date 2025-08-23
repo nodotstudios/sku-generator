@@ -13,8 +13,9 @@ export default function SkuGenerator() {
   const [error, setError] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
-  const [rule, setRule] = useState("rule1");
+  const [rule, setRule] = useState("rule1"); // rule1 or rule2
   const [separator, setSeparator] = useState("-");
+  const [fullColor, setFullColor] = useState(false); // NEW: checkbox that forces attribute4 full
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
 
@@ -74,22 +75,34 @@ export default function SkuGenerator() {
     return words.map((w) => (w[0] || "")).join("");
   };
 
+  // sanitize full attribute: remove spaces and non-alphanumeric, preserve letters+digits
+  const sanitizeFull = (text) => {
+    if (!text) return "";
+    return text.trim().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "");
+  };
+
   const buildProductCode = (prod, yearVal, ruleSel) => {
     if (!prod) return "";
     if (ruleSel === "rule1") {
       const code = firstNLettersOfFirstWord(prod, 3);
       return yearVal ? `${code}${String(yearVal).slice(-2)}` : code;
     } else {
+      // rule2 uses first letters of up to first 3 words for product
       const code = firstLetterOfFirstNWords(prod, 3);
       return yearVal ? `${code}${String(yearVal).slice(-2)}` : code;
     }
   };
 
-  const buildAttrCode = (text, ruleSel) => {
+  // build attribute code; attr4Full flag forces full sanitized value for attribute4
+  const buildAttrCode = (text, ruleSel, attr4Full = false) => {
     if (!text) return "";
+    if (attr4Full) {
+      return sanitizeFull(text);
+    }
     if (ruleSel === "rule1") {
       return firstNLettersOfFirstWord(text, 3);
     } else {
+      // rule2 uses first letters of up to first 3 words
       return firstLetterOfFirstNWords(text, 3);
     }
   };
@@ -102,8 +115,8 @@ export default function SkuGenerator() {
     setError("");
 
     const prodCode = buildProductCode(product, year, rule).toUpperCase();
-    const attr3Code = buildAttrCode(attribute3, rule).toUpperCase();
-    const attr4Code = buildAttrCode(attribute4, rule).toUpperCase();
+    const attr3Code = buildAttrCode(attribute3, rule, false).toUpperCase();
+    const attr4Code = buildAttrCode(attribute4, rule, fullColor).toUpperCase(); // fullColor applied here
 
     const parts = [];
     if (prodCode) parts.push(prodCode);
@@ -124,6 +137,7 @@ export default function SkuGenerator() {
         size,
         rule,
         separator: sep,
+        fullColor,
       };
     });
 
@@ -145,7 +159,7 @@ export default function SkuGenerator() {
   };
 
   const exportCSV = () => {
-    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator }) => ({
+    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator, fullColor }) => ({
       SKU: sku,
       Product: product,
       Year: year,
@@ -154,6 +168,7 @@ export default function SkuGenerator() {
       Size: size,
       Rule: rule,
       Separator: separator,
+      FullColor: fullColor ? "yes" : "no",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -162,7 +177,7 @@ export default function SkuGenerator() {
   };
 
   const exportExcel = () => {
-    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator }) => ({
+    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator, fullColor }) => ({
       SKU: sku,
       Product: product,
       Year: year,
@@ -171,6 +186,7 @@ export default function SkuGenerator() {
       Size: size,
       Rule: rule,
       Separator: separator,
+      FullColor: fullColor ? "yes" : "no",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -213,7 +229,6 @@ export default function SkuGenerator() {
       color: palette.text,
       paddingBottom: 24,
     },
-    /* header uses grid so center stays perfectly centered */
     header: {
       padding: "14px 18px",
       background: palette.surface,
@@ -229,7 +244,6 @@ export default function SkuGenerator() {
     headerRight: { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 },
     title: { fontSize: 18, fontWeight: 800, letterSpacing: 0.6 },
     subTitle: { fontSize: 12, color: palette.muted, marginTop: 4 },
-    headerActions: { display: "flex", gap: 8, alignItems: "center" },
     toggleBtn: { padding: "8px 12px", borderRadius: 10, border: `1px solid ${palette.border}`, background: "transparent", color: palette.text, cursor: "pointer" },
     wrap: { display: "flex", gap: 24, padding: 24, flexWrap: "wrap" },
     left: { flex: "1 1 360px", maxWidth: 520, display: "flex", flexDirection: "column", gap: 16 },
@@ -256,19 +270,19 @@ export default function SkuGenerator() {
       title: "Rule 1 — first 3 letters from first word (per attribute). Year added to product code",
       examples: [
         { input: { product: "Fall Winter", year: "2024", attribute3: "Denim Jacket", attribute4: "Blue Wash" } },
-        { input: { product: "Summer", year: "", attribute3: "Basic Tee", attribute4: "" } },
+        { input: { product: "Summer", year: "", attribute3: "Basic Tee", attribute4: "Black" } },
       ],
       note:
-        "Rule 1: For each attribute take the first 3 letters of the first word only. If year is provided, its last 2 digits are appended directly to the product code.",
+        "Rule 1: For each attribute take the first 3 letters of the first word only. If year is provided, its last 2 digits are appended directly to the product code. Use the Full color checkbox to include attribute 4 in full.",
     },
     rule2: {
       title: "Rule 2 — first letters of up to first 3 words (per attribute). Year added to product code",
       examples: [
         { input: { product: "Fall Winter Collection", year: "2024", attribute3: "Denim Jacket", attribute4: "Blue Wash" } },
-        { input: { product: "Summer", year: "", attribute3: "Basic Tee Long", attribute4: "" } },
+        { input: { product: "Summer", year: "", attribute3: "Basic Tee Long", attribute4: "Black" } },
       ],
       note:
-        "Rule 2: For each attribute take the first letter of each of the first up to 3 words and join them. If year is provided, its last 2 digits are appended directly to the product code.",
+        "Rule 2: For each attribute take the first letter of each of the first up to 3 words and join them. If year is provided, its last 2 digits are appended directly to the product code. Use the Full color checkbox to include attribute 4 in full.",
     },
   };
 
@@ -289,7 +303,7 @@ export default function SkuGenerator() {
 
         {/* center - always centered */}
         <div style={styles.headerCenter}>
-          <div style={{ ...styles.title, fontSize: isMobile ? 16 : 18, lineHeight: 1 }}>{/* center main title */}
+          <div style={{ ...styles.title, fontSize: isMobile ? 16 : 18, lineHeight: 1 }}>
             SKU GENERATOR
           </div>
           <div style={styles.subTitle}>for clothing brands by Nodot Studios</div>
@@ -331,7 +345,8 @@ export default function SkuGenerator() {
 
               <div>
                 <div style={styles.label}>Attribute 4 (Other info — optional)</div>
-                <input style={styles.input} placeholder="e.g. Color or Wash effect" value={attribute4} onChange={(e) => setAttribute4(e.target.value)} />
+                <input style={styles.input} placeholder="e.g. Blue Wash Extra (color/wash/full text)" value={attribute4} onChange={(e) => setAttribute4(e.target.value)} />
+                <div style={styles.smallNote}>If Full color is enabled then this field is included in full (sanitized) in the SKU.</div>
               </div>
 
               <div>
@@ -357,6 +372,13 @@ export default function SkuGenerator() {
                   </label>
                   <button onClick={() => setShowRuleModal(true)} style={{ ...styles.btnGhost, marginLeft: 8 }}>Rule info</button>
                 </div>
+              </div>
+
+              <div>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <input type="checkbox" checked={fullColor} onChange={(e) => setFullColor(e.target.checked)} />
+                  <span style={{ color: palette.text, fontSize: 13 }}>Full color (include Attribute 4 in full)</span>
+                </label>
               </div>
 
               <div>
@@ -423,13 +445,14 @@ export default function SkuGenerator() {
                   <th style={styles.th}>Attribute 4</th>
                   <th style={styles.th}>Size</th>
                   <th style={styles.th}>Rule</th>
+                  <th style={styles.th}>Full color</th>
                   <th style={styles.th}>Delete</th>
                 </tr>
               </thead>
               <tbody>
                 {generated.length === 0 && (
                   <tr>
-                    <td colSpan={8} style={{ ...styles.td, textAlign: "center", padding: 24, color: palette.muted }}>
+                    <td colSpan={9} style={{ ...styles.td, textAlign: "center", padding: 24, color: palette.muted }}>
                       No SKUs yet — add Product name and choose sizes, then click Generate SKU.
                     </td>
                   </tr>
@@ -444,6 +467,7 @@ export default function SkuGenerator() {
                     <td style={styles.td}>{row.attribute4}</td>
                     <td style={styles.td}>{row.size}</td>
                     <td style={styles.td}>{row.rule}</td>
+                    <td style={styles.td}>{row.fullColor ? "yes" : "no"}</td>
                     <td style={{ ...styles.td, textAlign: "center" }}>
                       <button style={styles.btnGhost} onClick={() => deleteSKU(i)}>❌</button>
                     </td>
@@ -477,14 +501,22 @@ export default function SkuGenerator() {
                 const inp = ex.input;
                 const produced = (() => {
                   const p = buildProductCode(inp.product, inp.year, rule).toUpperCase();
-                  const a3 = buildAttrCode(inp.attribute3, rule).toUpperCase();
-                  const a4 = buildAttrCode(inp.attribute4 || "", rule).toUpperCase();
+                  const a3 = buildAttrCode(inp.attribute3 || "", rule, false).toUpperCase();
+                  // when fullColor is true the attribute4 is sanitized full; for example preview we show both variants
+                  const a4Regular = buildAttrCode(inp.attribute4 || "", rule, false).toUpperCase();
+                  const a4Full = buildAttrCode(inp.attribute4 || "", rule, true).toUpperCase();
                   const sep = "-";
-                  const parts = [];
-                  if (p) parts.push(p);
-                  if (a3) parts.push(a3);
-                  if (a4) parts.push(a4);
-                  return parts.join(sep);
+                  const partsRegular = [];
+                  const partsFull = [];
+                  if (p) partsRegular.push(p);
+                  if (a3) partsRegular.push(a3);
+                  if (a4Regular) partsRegular.push(a4Regular);
+
+                  if (p) partsFull.push(p);
+                  if (a3) partsFull.push(a3);
+                  if (a4Full) partsFull.push(a4Full);
+
+                  return { regular: partsRegular.join(sep), full: partsFull.join(sep) };
                 })();
 
                 return (
@@ -499,12 +531,19 @@ export default function SkuGenerator() {
                       </span>
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <strong>Example output:</strong>
-                      <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 6 }}>{produced}</div>
+                      <strong>Example output (standard):</strong>
+                      <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 6 }}>{produced.regular}</div>
+                      <div style={{ height: 8 }} />
+                      <strong>Example output (Full color enabled):</strong>
+                      <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 6 }}>{produced.full}</div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+
+            <div style={{ marginTop: 12, color: palette.muted }}>
+              Note: Enabling Full color places Attribute 4 into the SKU in full (sanitized). This works with both Rule 1 and Rule 2.
             </div>
           </div>
         </div>
@@ -525,6 +564,7 @@ export default function SkuGenerator() {
               <li>Enter <strong>Product Name</strong> (required).</li>
               <li>Year is optional. If provided, the last two digits will be appended to the product code.</li>
               <li>Attribute 3 and Attribute 4 are optional. Add extra info such as styles or collection names.</li>
+              <li>Use the <strong>Full color</strong> checkbox to include Attribute 4 in full (sanitized). If unchecked, Attribute 4 follows the selected rule.</li>
               <li>Choose a <strong>separator</strong> (-, :, /) used across the SKU parts.</li>
               <li>Select a <strong>rule</strong> to decide how codes are extracted from the attributes. Click Rule info for examples.</li>
               <li>Select sizes and click <strong>Generate SKU</strong>. SKUs are stored in your browser.</li>
