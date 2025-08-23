@@ -279,11 +279,11 @@ export default function SkuGenerator() {
         <div style={styles.headerLeft}>
           <button
             onClick={() => setShowHowTo(true)}
-            title="How to use"
+            title="Tutorial"
             aria-label="How to use"
             style={styles.toggleBtn}
           >
-            {isMobile ? "❔" : "❔ How to use"}
+            {isMobile ? "❔" : "❔ Tutorial"}
           </button>
         </div>
 
@@ -315,7 +315,7 @@ export default function SkuGenerator() {
             <div style={{ display: "grid", gap: 12 }}>
               <div>
                 <div style={styles.label}>Product Name (required)</div>
-                <input style={styles.input} placeholder="e.g. Fall Winter" value={product} onChange={(e) => setProduct(e.target.value)} />
+                <input style={styles.input} placeholder="e.g. Oversized Tshirt" value={product} onChange={(e) => setProduct(e.target.value)} />
               </div>
 
               <div>
@@ -331,7 +331,7 @@ export default function SkuGenerator() {
 
               <div>
                 <div style={styles.label}>Attribute 4 (Other info — optional)</div>
-                <input style={styles.input} placeholder="e.g. Blue Wash or Style code" value={attribute4} onChange={(e) => setAttribute4(e.target.value)} />
+                <input style={styles.input} placeholder="e.g. Color or Wash effect" value={attribute4} onChange={(e) => setAttribute4(e.target.value)} />
               </div>
 
               <div>
