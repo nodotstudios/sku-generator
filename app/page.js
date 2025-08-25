@@ -15,7 +15,7 @@ export default function SkuGenerator() {
 
   const [rule, setRule] = useState("rule1"); // rule1 or rule2
   const [separator, setSeparator] = useState("-");
-  const [fullColor, setFullColor] = useState(false); // NEW: checkbox that forces attribute4 full
+  const [fullColor, setFullColor] = useState(false); // checkbox that forces attribute4 full
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
 
@@ -57,7 +57,7 @@ export default function SkuGenerator() {
     } catch (e) {}
   }, [darkMode]);
 
-  const allSizes = ["3XS","XXS","XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+  const allSizes = ["3XS", "XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 
   const toggleSize = (size) => {
     setSizes((prev) => (prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]));
@@ -147,11 +147,9 @@ export default function SkuGenerator() {
       return [...prev, ...uniqueNewSkus];
     });
 
-    setProduct("");
-    setYear("");
-    setAttribute3("");
-    setAttribute4("");
-    setSizes([]);
+    // *** IMPORTANT CHANGE: DO NOT clear the form fields here.
+    // The inputs remain so you can generate multiple batches for the same collection.
+    // Only Reset button clears the form.
   };
 
   const deleteSKU = (index) => {
@@ -397,7 +395,7 @@ export default function SkuGenerator() {
 
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <button style={styles.btnPrimary} onClick={generateSKU}>Generate SKU</button>
-                <button style={styles.btnGhost} onClick={() => { setProduct(""); setYear(""); setAttribute3(""); setAttribute4(""); setSizes([]); setError(""); }}>Reset</button>
+                <button style={styles.btnGhost} onClick={() => { setProduct(""); setYear(""); setAttribute3(""); setAttribute4(""); setSizes([]); setRule("rule1"); setSeparator("-"); setFullColor(false); setError(""); }}>Reset</button>
               </div>
             </div>
           </div>
@@ -567,7 +565,7 @@ export default function SkuGenerator() {
               <li>Use the <strong>Full color</strong> checkbox to include Attribute 4 in full (sanitized). If unchecked, Attribute 4 follows the selected rule.</li>
               <li>Choose a <strong>separator</strong> (-, :, /) used across the SKU parts.</li>
               <li>Select a <strong>rule</strong> to decide how codes are extracted from the attributes. Click Rule info for examples.</li>
-              <li>Select sizes and click <strong>Generate SKU</strong>. SKUs are stored in your browser.</li>
+              <li>Select sizes and click <strong>Generate SKU</strong>. SKUs are stored in your browser and form fields will remain so you can generate more.</li>
               <li>Export CSV/Excel to download the list.</li>
             </ol>
           </div>
