@@ -19,6 +19,11 @@ export default function SkuGenerator() {
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
 
+  // export modal state
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportType, setExportType] = useState("csv"); // "csv" or "xlsx"
+  const [exportFilename, setExportFilename] = useState("");
+
   // responsive: detect mobile to show icons only
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -30,6 +35,7 @@ export default function SkuGenerator() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // load theme + skus on mount
   useEffect(() => {
     try {
       const storedTheme = localStorage.getItem("theme");
@@ -45,12 +51,14 @@ export default function SkuGenerator() {
     }
   }, []);
 
+  // persist skus
   useEffect(() => {
     try {
       localStorage.setItem("skus", JSON.stringify(generated));
     } catch (e) {}
   }, [generated]);
 
+  // persist theme
   useEffect(() => {
     try {
       localStorage.setItem("theme", darkMode ? "dark" : "light");
@@ -147,34 +155,39 @@ export default function SkuGenerator() {
       return [...prev, ...uniqueNewSkus];
     });
 
-    // *** IMPORTANT CHANGE: DO NOT clear the form fields here.
-    // The inputs remain so you can generate multiple batches for the same collection.
-    // Only Reset button clears the form.
+    // NOTE: intentionally not clearing the input fields here so user can generate multiple batches.
   };
 
   const deleteSKU = (index) => {
     setGenerated((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const exportCSV = () => {
-    const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator, fullColor }) => ({
-      SKU: sku,
-      Product: product,
-      Year: year,
-      Attribute3: attribute3,
-      Attribute4: attribute4,
-      Size: size,
-      Rule: rule,
-      Separator: separator,
-      FullColor: fullColor ? "yes" : "no",
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "SKUs");
-    XLSX.writeFile(wb, "skus.csv");
+  const handleDeleteAll = () => {
+    const ok = window.confirm("Delete all generated SKUs? This cannot be undone.");
+    if (!ok) return;
+    setGenerated([]);
+    try {
+      localStorage.removeItem("skus");
+    } catch (e) {}
   };
 
-  const exportExcel = () => {
+  // open export modal with suggested filename
+  const openExportModal = (type) => {
+    const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    setExportType(type);
+    setExportFilename(`skus-${date}`);
+    setExportModalOpen(true);
+  };
+
+  // perform export using the current exportFilename and exportType, then close modal
+  const doExport = () => {
+    const name = (exportFilename || "skus").trim();
+    if (!name) {
+      alert("Please enter a filename.");
+      return;
+    }
+    const fileBase = name;
+
     const data = generated.map(({ sku, product, year, attribute3, attribute4, size, rule, separator, fullColor }) => ({
       SKU: sku,
       Product: product,
@@ -186,11 +199,24 @@ export default function SkuGenerator() {
       Separator: separator,
       FullColor: fullColor ? "yes" : "no",
     }));
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "SKUs");
-    XLSX.writeFile(wb, "skus.xlsx");
+
+    if (exportType === "csv") {
+      // write with .csv extension
+      XLSX.writeFile(wb, `${fileBase}.csv`);
+    } else {
+      XLSX.writeFile(wb, `${fileBase}.xlsx`);
+    }
+
+    setExportModalOpen(false);
   };
+
+  // quick direct exports (kept for compatibility) — they open the modal instead of immediately exporting
+  const exportCSV = () => openExportModal("csv");
+  const exportExcel = () => openExportModal("xlsx");
 
   const palette = darkMode
     ? {
@@ -261,6 +287,7 @@ export default function SkuGenerator() {
     helper: { fontSize: 13, color: palette.muted },
     smallNote: { fontSize: 12, color: palette.muted, marginTop: 6 },
     radioRow: { display: "flex", gap: 12, alignItems: "center", marginTop: 8 },
+    exportControls: { display: "flex", gap: 8, alignItems: "center" },
   };
 
   const ruleExamples = {
@@ -426,9 +453,10 @@ export default function SkuGenerator() {
         <div style={styles.rightCard}>
           <div style={{ display: "flex", gap: 12, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Generated SKUs ({generated.length})</h2>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={styles.exportControls}>
               <button style={styles.btnGhost} onClick={exportCSV}>Export CSV</button>
               <button style={styles.btnGhost} onClick={exportExcel}>Export Excel</button>
+              <button style={{ ...styles.btnGhost, borderColor: palette.danger, color: palette.danger }} onClick={handleDeleteAll}>Delete all</button>
             </div>
           </div>
 
@@ -480,6 +508,35 @@ export default function SkuGenerator() {
       <footer style={styles.footer}>
         Powered by <strong>Nodot Studios</strong>
       </footer>
+
+      {/* Export filename modal */}
+      {exportModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
+          <div style={{ width: 480, maxWidth: "94%", borderRadius: 12, padding: 16, background: palette.surface, border: `1px solid ${palette.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>Export {exportType === "csv" ? "CSV" : "Excel"}</h3>
+              <div>
+                <button onClick={() => setExportModalOpen(false)} style={styles.btnGhost}>Close</button>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <label style={{ fontSize: 13, color: palette.muted }}>Filename</label>
+              <input
+                value={exportFilename}
+                onChange={(e) => setExportFilename(e.target.value)}
+                placeholder="skus-2025-01-01"
+                style={{ ...styles.input, padding: "10px 12px" }}
+              />
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+                <button onClick={() => setExportModalOpen(false)} style={styles.btnGhost}>Cancel</button>
+                <button onClick={doExport} style={styles.btnPrimary}>Download</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Rule modal */}
       {showRuleModal && (
@@ -565,8 +622,8 @@ export default function SkuGenerator() {
               <li>Use the <strong>Full color</strong> checkbox to include Attribute 4 in full (sanitized). If unchecked, Attribute 4 follows the selected rule.</li>
               <li>Choose a <strong>separator</strong> (-, :, /) used across the SKU parts.</li>
               <li>Select a <strong>rule</strong> to decide how codes are extracted from the attributes. Click Rule info for examples.</li>
-              <li>Select sizes and click <strong>Generate SKU</strong>. SKUs are stored in your browser and form fields will remain so you can generate more.</li>
-              <li>Export CSV/Excel to download the list.</li>
+              <li>Select sizes and click <strong>Generate SKU</strong>. SKUs are stored in your browser and the form fields will remain so you can generate more.</li>
+              <li>Export CSV/Excel to download the list. Use Delete all to clear stored SKUs.</li>
             </ol>
           </div>
         </div>
